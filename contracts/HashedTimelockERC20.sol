@@ -107,7 +107,7 @@ contract HashedTimelockERC20 {
         uint _amount
     )
         external
-        tokensTransferable(_tokenContract, msg.sender, _amount)
+      //  tokensTransferable(_tokenContract, msg.sender, _amount)
         futureTimelock(_timelock)
         returns (bytes32 contractId)
     {
@@ -127,8 +127,8 @@ contract HashedTimelockERC20 {
             revert();
 
         // This contract becomes the temporary owner of the tokens
-        if (!ERC20(_tokenContract).transferFrom(msg.sender, this, _amount))
-            revert();
+        /* if (!ERC20(_tokenContract).transferFrom(msg.sender, this, _amount))
+            revert(); */
 
         contracts[contractId] = LockContract(
             msg.sender,

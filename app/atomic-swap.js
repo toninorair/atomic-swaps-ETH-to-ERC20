@@ -58,9 +58,24 @@ web3.eth.getAccounts(function(err, accs) {
   part1 = accounts[1];
   part2 = accounts[2];
 
-  initETHAtomicSwap('hello', part2, Date.now() / 1000 + 24 * 60 * 60, 2)
-    .then(args => console.log("args = ", args));
-  //console.log("hashlock = ", hashlock);
+  let resHTLC, resHTLC_ERC20, tokenAddress;
+
+  TESTC.deployed()
+   .then(instance => tokenAddress = instance.address)
+   .then(() => initETHAtomicSwap('hello', part2, Date.now() / 1000 + 24 * 60 * 60, 2))
+   .then(res => {
+     //console.log("res = ", res);
+     console.log("New ETH HTLC was successfully added");
+     resHTLC = res;
+     return initERC20AtomicSwap(part1, resHTLC.hashlock,
+       Date.now() / 1000 + 12 * 60 * 60, tokenAddress, 100)
+   })
+   .then(res => {
+     console.log("New ERC20 HTLC was successfully added");
+     resHTLC_ERC20 = res;
+     console.log(resHTLC_ERC20)
+   })
+   .catch(err => console.error("error occured = ", err));
 });
 
 
@@ -80,7 +95,8 @@ function initETHAtomicSwap(secret, receiver, timelock, sum) {
     .then(tx => {
           const log = tx.logs[0]
           console.log("Log event  = "  + log.event);
-          console.log("Log args = ", log.args);
+          //TODO print more info here
+          //console.log("Log args = ", log.args);
 
           return log.args;
      })
@@ -92,6 +108,7 @@ function initERC20AtomicSwap(receiver, hashlock, timelock, tokenContract, sum) {
 
   return HTLC_ERC20.deployed()
    .then(instance => {
+     console.log("inside with tokenContract = ", tokenContract);
      htlc = instance;
      return htlc.newContract(receiver, hashlock, timelock, tokenContract, sum,
            {from: part2, gas: 4000000})
@@ -99,9 +116,10 @@ function initERC20AtomicSwap(receiver, hashlock, timelock, tokenContract, sum) {
    .then(tx => {
          const log = tx.logs[0]
          console.log("Log event  = "  + log.event);
-         console.log("Log args = ", log.args);
+         //TODO print more info here
+         //console.log("Log args = ", log.args);
 
-         return tx.args.contractId;
+         return log.args;
     })
     .catch(err => console.error("error = " + err))
 }
