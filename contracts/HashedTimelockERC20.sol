@@ -244,4 +244,17 @@ contract HashedTimelockERC20 {
         exists = (contracts[_contractId].sender != address(0));
     }
 
+    /**
+     * This provides a single source of truth for the encoding algorithm.
+     * @param secret The secret to be hashed.
+     * @return the hashed secret.
+     */
+    function hashSecret(bytes32 secret)
+        constant
+        public
+        returns(bytes32 hashed)
+    {
+        return sha256(secret);
+    }
+
 }
