@@ -56,12 +56,18 @@ web3.eth.getAccounts(function(err, accs) {
 
   accounts = accs;
   part1 = accounts[1];
-  part2 = accounts[2];
+  part2 = accounts[0];
 
-  let resHTLC, resHTLC_ERC20, tokenAddress;
+  let resHTLC, resHTLC_ERC20, tokenAddress, tokenI, htlc20I;
 
   TESTC.deployed()
-   .then(instance => tokenAddress = instance.address)
+   .then(instance => {tokenI = instance; tokenAddress = instance.address;})
+   // .then(() => HTLC_ERC20.deployed())
+   // .then(instance => {
+   //   htlc20I = instance;
+   //   tokenI.approve(htlc20I.address, 100, {from: part2})
+   // })
+   // // .then(res => console.log("approval res = ", res))
    .then(() => initETHAtomicSwap('hello', part2, Date.now() / 1000 + 24 * 60 * 60, 2))
    .then(res => {
      //console.log("res = ", res);
@@ -108,7 +114,6 @@ function initERC20AtomicSwap(receiver, hashlock, timelock, tokenContract, sum) {
 
   return HTLC_ERC20.deployed()
    .then(instance => {
-     console.log("inside with tokenContract = ", tokenContract);
      htlc = instance;
      return htlc.newContract(receiver, hashlock, timelock, tokenContract, sum,
            {from: part2, gas: 4000000})
