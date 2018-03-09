@@ -59,6 +59,7 @@ web3.eth.getAccounts(function(err, accs) {
   part2 = accounts[0];
 
   let resHTLC, resHTLC_ERC20, tokenAddress, tokenI, htlc20I;
+  let secret = 'hello'
 
   TESTC.deployed()
    .then(instance => {tokenI = instance; tokenAddress = instance.address;})
@@ -68,7 +69,7 @@ web3.eth.getAccounts(function(err, accs) {
    //   tokenI.approve(htlc20I.address, 100, {from: part2})
    // })
    // // .then(res => console.log("approval res = ", res))
-   .then(() => initETHAtomicSwap('hello', part2, Date.now() / 1000 + 24 * 60 * 60, 2))
+   .then(() => initETHAtomicSwap(secret, part2, Date.now() / 1000 + 24 * 60 * 60, 2))
    .then(res => {
      //console.log("res = ", res);
      console.log("New ETH HTLC was successfully added");
@@ -80,6 +81,18 @@ web3.eth.getAccounts(function(err, accs) {
      console.log("New ERC20 HTLC was successfully added");
      resHTLC_ERC20 = res;
      console.log(resHTLC_ERC20)
+   })
+   //withdraw money from ERC20 HTLC contract by first party (this party reveals secret)
+   // .then(() => {
+   //   return HTLC_ERC20.deployed()
+   //    .then(instance => instance.withdraw(resHTLC_ERC20.contractId, secret, {from: part1}))
+   //    .then(tx => console.log("LOGS = ", tx.logs[0]))
+   // })
+   //withdraw money from ETH HTLC contract by second party
+   .then(() => {
+     return HTLC.deployed()
+      .then(instance => instance.withdraw(resHTLC.contractId, secret, {from: part2}))
+      .then(tx => console.log("LOGS = ", tx.logs[0]))
    })
    .catch(err => console.error("error occured = ", err));
 });
