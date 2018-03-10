@@ -58,36 +58,42 @@ web3.eth.getAccounts(function(err, accs) {
   part1 = accounts[1];
   part2 = accounts[0];
 
-  let resHTLC, resHTLC_ERC20, tokenAddress, tokenI, htlc20I;
+  let resHTLC, resHTLC_ERC20, tokenAddress, tokenI, htlcERC20I;
   let secret = 'hello'
+
 
   TESTC.deployed()
    .then(instance => {tokenI = instance; tokenAddress = instance.address;})
-   // .then(() => HTLC_ERC20.deployed())
-   // .then(instance => {
-   //   htlc20I = instance;
-   //   tokenI.approve(htlc20I.address, 100, {from: part2})
-   // })
-   // // .then(res => console.log("approval res = ", res))
+   .then(() => HTLC_ERC20.deployed())
+   .then(instance => {
+       htlcERC20I = instance;
+       tokenI.approve(instance.address, 10000, {from: part2})
+       //tokenI.approve(part1, 100, {from: instance.address})
+    })
+   .then(() => tokenI.allowance(part2, htlcERC20I.address))
+   .then(res => console.log("allowance res = ", res))
    .then(() => initETHAtomicSwap(secret, part2, Date.now() / 1000 + 24 * 60 * 60, 2))
    .then(res => {
      //console.log("res = ", res);
      console.log("New ETH HTLC was successfully added");
      resHTLC = res;
      return initERC20AtomicSwap(part1, resHTLC.hashlock,
-       Date.now() / 1000 + 12 * 60 * 60, tokenAddress, 100)
+       Date.now() / 1000 + 12 * 60 * 60, tokenAddress, 200)
    })
    .then(res => {
      console.log("New ERC20 HTLC was successfully added");
      resHTLC_ERC20 = res;
-     console.log(resHTLC_ERC20)
+    // console.log(resHTLC_ERC20)
    })
-   //withdraw money from ERC20 HTLC contract by first party (this party reveals secret)
-   // .then(() => {
-   //   return HTLC_ERC20.deployed()
-   //    .then(instance => instance.withdraw(resHTLC_ERC20.contractId, secret, {from: part1}))
-   //    .then(tx => console.log("LOGS = ", tx.logs[0]))
-   // })
+  
+   .then(() => {
+     return HTLC_ERC20.deployed()
+      .then(instance => {
+        return instance.withdraw(resHTLC_ERC20.contractId, secret, {from: part1, gas: 4000000})
+      })
+      .then(tx => console.log("LOGS = ", tx.logs[0]))
+   })
+
    //withdraw money from ETH HTLC contract by second party
    .then(() => {
      return HTLC.deployed()
@@ -128,6 +134,7 @@ function initERC20AtomicSwap(receiver, hashlock, timelock, tokenContract, sum) {
   return HTLC_ERC20.deployed()
    .then(instance => {
      htlc = instance;
+     console.log("ADDRESS = ", instance.address)
      return htlc.newContract(receiver, hashlock, timelock, tokenContract, sum,
            {from: part2, gas: 4000000})
     })
