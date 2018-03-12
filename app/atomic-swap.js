@@ -61,8 +61,15 @@ web3.eth.getAccounts(function(err, accs) {
   part1 = accounts[1];
   part2 = accounts[0];
 
-  let resHTLC, resHTLC_ERC20, tokenI, htlcERC20I, htlcI;
   let secret = 'hello'
+
+  executeAtomicSwap(secret, part1, part2)
+
+});
+
+function executeAtomicSwap(secret, part1, part2) {
+
+  let resHTLC, resHTLC_ERC20, tokenI, htlcERC20I, htlcI;
 
   //deploy all needed contracts
   deployAllContracts()
@@ -94,8 +101,7 @@ web3.eth.getAccounts(function(err, accs) {
 
    //error handling
    .catch(err => console.error("error occured = ", err));
-});
-
+}
 
 function deployAllContracts() {
   let tokenI, htlcERC20I, htlcI;
