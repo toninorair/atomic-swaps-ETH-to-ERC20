@@ -106,10 +106,8 @@ function initETHAtomicSwap(htlc, secret, receiver, timelock, sum) {
    let hashlock
 
    return htlc.hashSecret(secret, {from: part1})
-    .then(hashedSecret => {
-      hashlock = hashedSecret;
-      return htlc.newContract(receiver, hashlock, timelock, {from: part1, value: sum, gas: 4000000})
-    })
+    .then(hashlock => htlc.newContract(receiver, hashlock, timelock,
+                          {from: part1, value: sum, gas: 4000000}))
     .then(tx => {
           const log = tx.logs[0]
           console.log("Log event  = "  + log.event);
