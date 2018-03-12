@@ -4,8 +4,7 @@ var Web3 = require('web3');
 var config = require('./config.js')
 var utils = require('./utils.js')
 
-var web3 = new Web3(new Web3.providers.HttpProvider(config.blockchainNodeAdrress));
-//console.log("blockchain address = " + config.blockchainNodeAddress);
+let web3 = new Web3(new Web3.providers.HttpProvider(config.blockchainNodeAdrress));
 
 var HTLC= contract(require('../build/contracts/HashedTimelock.json'))
 HTLC.setProvider(web3.currentProvider)
@@ -39,33 +38,6 @@ if (typeof TESTC.currentProvider.sendAsync !== "function") {
     );
   };
 }
-
-var accounts = [];
-var part1 = null;
-var part2 = null;
-
-
-// Get the initial accounts
-web3.eth.getAccounts(function(err, accs) {
-  if (err != null) {
-    console.error("There was an error fetching your accounts.");
-    return;
-  }
-
-  if (accs.length == 0) {
-    console.error("Couldn't get any accounts! Make sure your Ethereum client is configured correctly.");
-    return;
-  }
-
-  accounts = accs;
-  part1 = accounts[1];
-  part2 = accounts[0];
-
-  let secret = 'hello'
-
-  executeAtomicSwap(secret, part1, part2)
-
-});
 
 function executeAtomicSwap(secret, part1, part2) {
 
@@ -101,6 +73,44 @@ function executeAtomicSwap(secret, part1, part2) {
 
    //error handling
    .catch(err => console.error("error occured = ", err));
+
+   function deployAllContracts() {
+     let tokenI, htlcERC20I, htlcI;
+
+     return TESTC.deployed()
+      .then(instance => tokenI = instance)
+      .then(() => HTLC.deployed())
+      .then(instance => htlcI = instance)
+      .then(() => HTLC_ERC20.deployed())
+      .then(instance => {
+        htlcERC20I = instance;
+        return { tokenI: tokenI, htlcERC20I: htlcERC20I, htlcI: htlcI }
+      })
+      .catch(err => console.error("Deploy all contracts failed with an error = ", err))
+   }
+
+   function initETHAtomicSwap(htlc, secret, receiver, timelock, sum) {
+      return htlc.hashSecret(secret, {from: part1})
+       .then(hashlock => htlc.newContract(receiver, hashlock, timelock,
+                             {from: part1, value: sum, gas: config.GAS_VALUE}))
+       .then(tx => {
+             const log = tx.logs[0]
+             utils.printNewContractInfo(log);
+             return log.args;
+        })
+        .catch(err => console.error("Init ETH Atomic swap failed with an error = " + err))
+   }
+
+   function initERC20AtomicSwap(htlc, receiver, hashlock, timelock, tokenContract, sum) {
+     return htlc.newContract(receiver, hashlock, timelock, tokenContract, sum,
+              {from: part2, gas: config.GAS_VALUE})
+      .then(tx => {
+            const log = tx.logs[0]
+            utils.printNewContractInfo(log)
+            return log.args;
+       })
+       .catch(err => console.error("Init ERC20 Atomic swap failed with an error = " + err))
+   }
 }
 
 function deployAllContracts() {
@@ -140,3 +150,5 @@ function initERC20AtomicSwap(htlc, receiver, hashlock, timelock, tokenContract, 
     })
     .catch(err => console.error("Init ERC20 Atomic swap failed with an error = " + err))
 }
+
+module.exports.executeAtomicSwap = executeAtomicSwap
