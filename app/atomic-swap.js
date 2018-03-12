@@ -1,6 +1,8 @@
 var contract = require('truffle-contract')
 var Web3 = require('web3');
+
 var config = require('./config.js')
+var utils = require('./utils.js')
 
 var web3 = new Web3(new Web3.providers.HttpProvider(config.blockchainNodeAdrress));
 //console.log("blockchain address = " + config.blockchainNodeAddress);
@@ -42,7 +44,6 @@ var accounts = [];
 var part1 = null;
 var part2 = null;
 
-const GAS_VALUE = 4000000;
 
 // Get the initial accounts
 web3.eth.getAccounts(function(err, accs) {
@@ -92,7 +93,7 @@ web3.eth.getAccounts(function(err, accs) {
    })
 
    //withdraw money from ETH ERC20 HTLC contract by first party
-   .then(() => htlcERC20I.withdraw(resHTLC_ERC20.contractId, secret, {from: part1, gas: GAS_VALUE}))
+   .then(() => htlcERC20I.withdraw(resHTLC_ERC20.contractId, secret, {from: part1, gas: config.GAS_VALUE}))
    .then(tx => console.log("LOGS = ", tx.logs[0]))
 
    //withdraw money from ETH HTLC contract by second party
@@ -107,10 +108,10 @@ web3.eth.getAccounts(function(err, accs) {
 function initETHAtomicSwap(htlc, secret, receiver, timelock, sum) {
    return htlc.hashSecret(secret, {from: part1})
     .then(hashlock => htlc.newContract(receiver, hashlock, timelock,
-                          {from: part1, value: sum, gas: GAS_VALUE}))
+                          {from: part1, value: sum, gas: config.GAS_VALUE}))
     .then(tx => {
           const log = tx.logs[0]
-          printNewContractInfo(log);
+          utils.printNewContractInfo(log);
           return log.args;
      })
      .catch(err => console.error("error = " + err))
@@ -118,23 +119,11 @@ function initETHAtomicSwap(htlc, secret, receiver, timelock, sum) {
 
 function initERC20AtomicSwap(htlc, receiver, hashlock, timelock, tokenContract, sum) {
   return htlc.newContract(receiver, hashlock, timelock, tokenContract, sum,
-           {from: part2, gas: GAS_VALUE})
+           {from: part2, gas: config.GAS_VALUE})
    .then(tx => {
          const log = tx.logs[0]
-         printNewContractInfo(log)
+         utils.printNewContractInfo(log)
          return log.args;
     })
     .catch(err => console.error("error = " + err))
-}
-
-function printNewContractInfo(log) {
-  console.log("================ New Contract was created ================")
-  console.log("Log event = ", log.event);
-
-  Object.keys(log.args).forEach(function(key, index) {
-    console.log(`${key} = ${log.args[key] instanceof Number ?
-      log.args[key].toNumber(): log.args[key]}`)
-   });
-   
-  console.log("==========================================================")
 }
