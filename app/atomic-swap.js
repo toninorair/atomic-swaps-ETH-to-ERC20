@@ -42,7 +42,7 @@ var accounts = [];
 var part1 = null;
 var part2 = null;
 
-// Get the initial accounts 
+// Get the initial accounts
 web3.eth.getAccounts(function(err, accs) {
   if (err != null) {
     console.error("There was an error fetching your accounts.");
@@ -75,14 +75,14 @@ web3.eth.getAccounts(function(err, accs) {
     })
 
     //create ETH HTLC script, lock fund there for second participant
-   .then(() => initETHAtomicSwap(secret, part2, Date.now() / 1000 + 24 * 60 * 60, 2))
+   .then(() => initETHAtomicSwap(htlcI, secret, part2, Date.now() / 1000 + 24 * 60 * 60, 2))
    .then(res => {
      console.log("New ETH HTLC was successfully added");
      resHTLC = res;
    })
 
    //create ERC20 HTLC script, lock fund there for first participant
-   .then(() => initERC20AtomicSwap(part1, resHTLC.hashlock,
+   .then(() => initERC20AtomicSwap(htlcERC20I, part1, resHTLC.hashlock,
                   Date.now() / 1000 + 12 * 60 * 60, tokenI.address, 200))
    .then(res => {
      console.log("New ERC20 HTLC was successfully added");
@@ -102,15 +102,10 @@ web3.eth.getAccounts(function(err, accs) {
 });
 
 
-function initETHAtomicSwap(secret, receiver, timelock, sum) {
-   let htlc;
+function initETHAtomicSwap(htlc, secret, receiver, timelock, sum) {
    let hashlock
 
-   return HTLC.deployed()
-    .then(instance => {
-      htlc = instance;
-      return htlc.hashSecret(secret, {from: part1})
-     })
+   return htlc.hashSecret(secret, {from: part1})
     .then(hashedSecret => {
       hashlock = hashedSecret;
       return htlc.newContract(receiver, hashlock, timelock, {from: part1, value: sum, gas: 4000000})
@@ -126,16 +121,10 @@ function initETHAtomicSwap(secret, receiver, timelock, sum) {
      .catch(err => console.error("error = " + err))
 }
 
-function initERC20AtomicSwap(receiver, hashlock, timelock, tokenContract, sum) {
-  let htlc;
+function initERC20AtomicSwap(htlc, receiver, hashlock, timelock, tokenContract, sum) {
 
-  return HTLC_ERC20.deployed()
-   .then(instance => {
-     htlc = instance;
-     console.log("ADDRESS = ", instance.address)
-     return htlc.newContract(receiver, hashlock, timelock, tokenContract, sum,
+  return htlc.newContract(receiver, hashlock, timelock, tokenContract, sum,
            {from: part2, gas: 4000000})
-    })
    .then(tx => {
          const log = tx.logs[0]
          console.log("Log event  = "  + log.event);
