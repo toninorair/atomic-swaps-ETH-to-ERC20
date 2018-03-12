@@ -105,10 +105,10 @@ class AtomicSwap {
      .catch(err => console.error("Deploy all contracts failed with an error = ", err))
   }
 
-  initETHAtomicSwap(htlc, receiver, timelock) {
-     return htlc.hashSecret(this.secret, {from: part1})
+  initETHAtomicSwap(owner, htlc, receiver, timelock) {
+     return htlc.hashSecret(this.secret, {from: owner})
       .then(hashlock => htlc.newContract(receiver, hashlock, timelock,
-                            {from: part1, value: this.ethSum, gas: config.GAS_VALUE}))
+                            {from: owner, value: this.ethSum, gas: config.GAS_VALUE}))
       .then(tx => {
             const log = tx.logs[0]
             utils.printNewContractInfo(log);
@@ -117,9 +117,9 @@ class AtomicSwap {
        .catch(err => console.error("Init ETH Atomic swap failed with an error = " + err))
   }
 
-  initERC20AtomicSwap(htlc, receiver, hashlock, timelock, tokenContract) {
+  initERC20AtomicSwap(owner, htlc, receiver, hashlock, timelock, tokenContract) {
     return htlc.newContract(receiver, hashlock, timelock, tokenContract, this.tokenSum,
-             {from: part2, gas: config.GAS_VALUE})
+             {from: owner, gas: config.GAS_VALUE})
      .then(tx => {
            const log = tx.logs[0]
            utils.printNewContractInfo(log)
@@ -145,12 +145,12 @@ class AtomicSwap {
      .then(() => tokenI.approve(htlcERC20I.address, this.tokenSum, {from: this.part2}))
 
       //create ETH HTLC script, lock fund there for second participant
-     .then(() => this.initETHAtomicSwap(htlcI, this.part2, utils.getTimelock(true)))
+     .then(() => this.initETHAtomicSwap(this.part1, htlcI, this.part2, utils.getTimelock(true)))
      .then(res => resHTLC = res)
 
      //create ERC20 HTLC script, lock fund there for first participant
-     .then(() => this.initERC20AtomicSwap(htlcERC20I, this.part1, resHTLC.hashlock,
-                    utils.getTimelock(false), tokenI.address, this.tokenSum))
+     .then(() => this.initERC20AtomicSwap(this.part2, htlcERC20I, this.part1, resHTLC.hashlock,
+                    utils.getTimelock(false), tokenI.address))
      .then(res => resHTLC_ERC20 = res)
 
      //withdraw money from ETH ERC20 HTLC contract by first party
