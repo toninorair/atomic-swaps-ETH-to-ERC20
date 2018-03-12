@@ -11,7 +11,7 @@ function printNewContractInfo(log) {
   console.log("==========================================================")
 }
 
-function getTimelock(bool isSecretOwner) {
+function getTimelock(isSecretOwner) {
      return isSecretOwner ?
          Date.now() / 1000 + 24 * 60 * 60 :
          Date.now() / 1000 + 12 * 60 * 60;
