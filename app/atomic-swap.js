@@ -42,7 +42,7 @@ var accounts = [];
 var part1 = null;
 var part2 = null;
 
-// Get the initial accounts .
+// Get the initial accounts 
 web3.eth.getAccounts(function(err, accs) {
   if (err != null) {
     console.error("There was an error fetching your accounts.");
@@ -61,24 +61,29 @@ web3.eth.getAccounts(function(err, accs) {
   let resHTLC, resHTLC_ERC20, tokenI, htlcERC20I, htlcI;
   let secret = 'hello'
 
-
+  //deploy all needed contracts
   TESTC.deployed()
    .then(instance => tokenI = instance)
    .then(() => HTLC.deployed())
    .then(instance => htlcI = instance)
    .then(() => HTLC_ERC20.deployed())
+
    //approve moving of money from Token contract instance owner to HashedTimeLockERC20 instance
    .then(instance => {
        htlcERC20I = instance;
        tokenI.approve(instance.address, 10000, {from: part2})
     })
+
+    //create ETH HTLC script, lock fund there for second participant
    .then(() => initETHAtomicSwap(secret, part2, Date.now() / 1000 + 24 * 60 * 60, 2))
    .then(res => {
      console.log("New ETH HTLC was successfully added");
      resHTLC = res;
-     return initERC20AtomicSwap(part1, resHTLC.hashlock,
-       Date.now() / 1000 + 12 * 60 * 60, tokenI.address, 200)
    })
+
+   //create ERC20 HTLC script, lock fund there for first participant
+   .then(() => initERC20AtomicSwap(part1, resHTLC.hashlock,
+                  Date.now() / 1000 + 12 * 60 * 60, tokenI.address, 200))
    .then(res => {
      console.log("New ERC20 HTLC was successfully added");
      resHTLC_ERC20 = res;
