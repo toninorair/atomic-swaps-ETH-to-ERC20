@@ -65,17 +65,15 @@ web3.eth.getAccounts(function(err, accs) {
   let secret = 'hello'
 
   //deploy all needed contracts
-  TESTC.deployed()
-   .then(instance => tokenI = instance)
-   .then(() => HTLC.deployed())
-   .then(instance => htlcI = instance)
-   .then(() => HTLC_ERC20.deployed())
+  deployAllContracts()
+    .then(res => {
+       tokenI = res.tokenI;
+       htlcERC20I = res.htlcERC20I;
+       htlcI = res.htlcI;
+     })
 
    //approve moving of money from Token contract instance owner to HashedTimeLockERC20 instance
-   .then(instance => {
-       htlcERC20I = instance;
-       tokenI.approve(instance.address, 10000, {from: part2})
-    })
+   .then(() => tokenI.approve(htlcERC20I.address, 10000, {from: part2}))
 
     //create ETH HTLC script, lock fund there for second participant
    .then(() => initETHAtomicSwap(htlcI, secret, part2, utils.getTimelock(true), 2))
@@ -104,6 +102,21 @@ web3.eth.getAccounts(function(err, accs) {
    .catch(err => console.error("error occured = ", err));
 });
 
+
+function deployAllContracts() {
+  let tokenI, htlcERC20I, htlcI;
+
+  return TESTC.deployed()
+   .then(instance => tokenI = instance)
+   .then(() => HTLC.deployed())
+   .then(instance => htlcI = instance)
+   .then(() => HTLC_ERC20.deployed())
+   .then(instance => {
+     htlcERC20I = instance;
+     return { tokenI: tokenI, htlcERC20I: htlcERC20I, htlcI: htlcI }
+   })
+   .catch(err => console.error("Deploy all contracts failed with an error = ", err))
+}
 
 function initETHAtomicSwap(htlc, secret, receiver, timelock, sum) {
    return htlc.hashSecret(secret, {from: part1})
