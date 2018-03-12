@@ -83,21 +83,16 @@ web3.eth.getAccounts(function(err, accs) {
      console.log("New ERC20 HTLC was successfully added");
      resHTLC_ERC20 = res;
    })
+
    //withdraw money from ETH ERC20 HTLC contract by first party
-   .then(() => {
-     return HTLC_ERC20.deployed()
-      .then(instance => {
-        return instance.withdraw(resHTLC_ERC20.contractId, secret, {from: part1, gas: 4000000})
-      })
-      .then(tx => console.log("LOGS = ", tx.logs[0]))
-   })
+   .then(() => htlcERC20I.withdraw(resHTLC_ERC20.contractId, secret, {from: part1, gas: 4000000}))
+   .then(tx => console.log("LOGS = ", tx.logs[0]))
 
    //withdraw money from ETH HTLC contract by second party
-   .then(() => {
-     return HTLC.deployed()
-      .then(instance => instance.withdraw(resHTLC.contractId, secret, {from: part2}))
-      .then(tx => console.log("LOGS = ", tx.logs[0]))
-   })
+   .then(() => htlcI.withdraw(resHTLC.contractId, secret, {from: part2}))
+   .then(tx => console.log("LOGS = ", tx.logs[0]))
+
+   //error handling
    .catch(err => console.error("error occured = ", err));
 });
 
