@@ -23,8 +23,10 @@ web3.eth.getAccounts(function(err, accs) {
 
   //TODO ADD generation of a random secret here
   let secret = 'hello'
+  let ethSum = 2;
+  let tokenSum = 200;
 
-  swap = new swaps.AtomicSwap(secret, part1, part2);
+  swap = new swaps.AtomicSwap(secret, part1, part2, ethSum, tokenSum);
   swap.executeAtomicSwap();
 
 });

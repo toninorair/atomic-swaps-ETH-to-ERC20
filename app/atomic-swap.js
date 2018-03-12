@@ -41,14 +41,16 @@ if (typeof TESTC.currentProvider.sendAsync !== "function") {
 
 class AtomicSwap {
 
-  //let secret, part1, part2;
+  // let secret, part1, part2;
+  // let TESTC, HTLC, HTLC_ERC20;
 
-  //let TESTC, HTLC, HTLC_ERC20;
-
-  constructor(secret, part1, part2) {
+  constructor(secret, part1, part2, ethSum, tokenSum) {
       this.secret = secret;
       this.part1 = part1;
       this.part2 = part2;
+
+      this.ethSum = ethSum;
+      this.tokenSum = tokenSum;
 
       this.initContracts();
   }
@@ -126,6 +128,7 @@ class AtomicSwap {
       .catch(err => console.error("Init ERC20 Atomic swap failed with an error = " + err))
   }
 
+  //executing atomic swap, main function here
   executeAtomicSwap() {
 
     let resHTLC, resHTLC_ERC20, tokenI, htlcERC20I, htlcI;
@@ -139,15 +142,15 @@ class AtomicSwap {
       })
 
      //approve moving of money from Token contract instance owner to HashedTimeLockERC20 instance
-     .then(() => tokenI.approve(htlcERC20I.address, 10000, {from: this.part2}))
+     .then(() => tokenI.approve(htlcERC20I.address, this.tokenSum, {from: this.part2}))
 
       //create ETH HTLC script, lock fund there for second participant
-     .then(() => this.initETHAtomicSwap(htlcI, this.secret, this.part2, utils.getTimelock(true), 2))
+     .then(() => this.initETHAtomicSwap(htlcI, this.secret, this.part2, utils.getTimelock(true), this.ethSum))
      .then(res => resHTLC = res)
 
      //create ERC20 HTLC script, lock fund there for first participant
      .then(() => this.initERC20AtomicSwap(htlcERC20I, this.part1, resHTLC.hashlock,
-                    utils.getTimelock(false), tokenI.address, 200))
+                    utils.getTimelock(false), tokenI.address, this.tokenSum))
      .then(res => resHTLC_ERC20 = res)
 
      //withdraw money from ETH ERC20 HTLC contract by first party
