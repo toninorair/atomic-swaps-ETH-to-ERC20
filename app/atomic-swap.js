@@ -105,10 +105,10 @@ class AtomicSwap {
      .catch(err => console.error("Deploy all contracts failed with an error = ", err))
   }
 
-  initETHAtomicSwap(htlc, secret, receiver, timelock, sum) {
-     return htlc.hashSecret(secret, {from: part1})
+  initETHAtomicSwap(htlc, receiver, timelock) {
+     return htlc.hashSecret(this.secret, {from: part1})
       .then(hashlock => htlc.newContract(receiver, hashlock, timelock,
-                            {from: part1, value: sum, gas: config.GAS_VALUE}))
+                            {from: part1, value: this.ethSum, gas: config.GAS_VALUE}))
       .then(tx => {
             const log = tx.logs[0]
             utils.printNewContractInfo(log);
@@ -117,8 +117,8 @@ class AtomicSwap {
        .catch(err => console.error("Init ETH Atomic swap failed with an error = " + err))
   }
 
-  initERC20AtomicSwap(htlc, receiver, hashlock, timelock, tokenContract, sum) {
-    return htlc.newContract(receiver, hashlock, timelock, tokenContract, sum,
+  initERC20AtomicSwap(htlc, receiver, hashlock, timelock, tokenContract) {
+    return htlc.newContract(receiver, hashlock, timelock, tokenContract, this.tokenSum,
              {from: part2, gas: config.GAS_VALUE})
      .then(tx => {
            const log = tx.logs[0]
@@ -145,7 +145,7 @@ class AtomicSwap {
      .then(() => tokenI.approve(htlcERC20I.address, this.tokenSum, {from: this.part2}))
 
       //create ETH HTLC script, lock fund there for second participant
-     .then(() => this.initETHAtomicSwap(htlcI, this.secret, this.part2, utils.getTimelock(true), this.ethSum))
+     .then(() => this.initETHAtomicSwap(htlcI, this.part2, utils.getTimelock(true)))
      .then(res => resHTLC = res)
 
      //create ERC20 HTLC script, lock fund there for first participant
