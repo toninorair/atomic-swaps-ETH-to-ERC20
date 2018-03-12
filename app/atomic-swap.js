@@ -39,116 +39,129 @@ if (typeof TESTC.currentProvider.sendAsync !== "function") {
   };
 }
 
-function executeAtomicSwap(secret, part1, part2) {
+class AtomicSwap {
 
-  let resHTLC, resHTLC_ERC20, tokenI, htlcERC20I, htlcI;
+  //let secret, part1, part2;
 
-  //deploy all needed contracts
-  deployAllContracts()
-    .then(res => {
-       tokenI = res.tokenI;
-       htlcERC20I = res.htlcERC20I;
-       htlcI = res.htlcI;
-    })
+  //let TESTC, HTLC, HTLC_ERC20;
 
-   //approve moving of money from Token contract instance owner to HashedTimeLockERC20 instance
-   .then(() => tokenI.approve(htlcERC20I.address, 10000, {from: part2}))
+  constructor(secret, part1, part2) {
+      this.secret = secret;
+      this.part1 = part1;
+      this.part2 = part2;
 
-    //create ETH HTLC script, lock fund there for second participant
-   .then(() => initETHAtomicSwap(htlcI, secret, part2, utils.getTimelock(true), 2))
-   .then(res => resHTLC = res)
+      this.initContracts();
+  }
 
-   //create ERC20 HTLC script, lock fund there for first participant
-   .then(() => initERC20AtomicSwap(htlcERC20I, part1, resHTLC.hashlock,
-                  utils.getTimelock(false), tokenI.address, 200))
-   .then(res => resHTLC_ERC20 = res)
+  initContracts() {
+    this.HTLC= contract(require('../build/contracts/HashedTimelock.json'))
+    this.HTLC.setProvider(web3.currentProvider)
+    //dirty hack for web3@1.0.0 support for localhost testrpc, see https://github.com/trufflesuite/truffle-contract/issues/56#issuecomment-331084530
+    if (typeof this.HTLC.currentProvider.sendAsync !== "function") {
+      this.HTLC.currentProvider.sendAsync = function() {
+        return this.HTLC.currentProvider.send.apply(
+          this.HTLC.currentProvider, arguments
+        );
+      };
+    }
 
-   //withdraw money from ETH ERC20 HTLC contract by first party
-   .then(() => htlcERC20I.withdraw(resHTLC_ERC20.contractId, secret, {from: part1, gas: config.GAS_VALUE}))
-   .then(tx => console.log("LOGS = ", tx.logs[0]))
+    this.HTLC_ERC20 = contract(require('../build/contracts/HashedTimelockERC20.json'))
+    this.HTLC_ERC20.setProvider(web3.currentProvider)
+    //dirty hack for web3@1.0.0 support for localhost testrpc, see https://github.com/trufflesuite/truffle-contract/issues/56#issuecomment-331084530
+    if (typeof this.HTLC_ERC20.currentProvider.sendAsync !== "function") {
+      this.HTLC_ERC20.currentProvider.sendAsync = function() {
+        return this.HTLC_ERC20.currentProvider.send.apply(
+          this.HTLC_ERC20.currentProvider, arguments
+        );
+      };
+    }
 
-   //withdraw money from ETH HTLC contract by second party
-   .then(() => htlcI.withdraw(resHTLC.contractId, secret, {from: part2}))
-   .then(tx => console.log("LOGS = ", tx.logs[0]))
+    this.TESTC = contract(require('../build/contracts/TestToken.json'))
+    this.TESTC.setProvider(web3.currentProvider)
+    //dirty hack for web3@1.0.0 support for localhost testrpc, see https://github.com/trufflesuite/truffle-contract/issues/56#issuecomment-331084530
+    if (typeof this.TESTC.currentProvider.sendAsync !== "function") {
+      this.TESTC.currentProvider.sendAsync = function() {
+        return this.TESTC.currentProvider.send.apply(
+          this.TESTC.currentProvider, arguments
+        );
+      };
+    }
+  }
 
-   //error handling
-   .catch(err => console.error("error occured = ", err));
+  deployAllContracts() {
+    let tokenI, htlcERC20I, htlcI;
 
-   function deployAllContracts() {
-     let tokenI, htlcERC20I, htlcI;
+    return TESTC.deployed()
+     .then(instance => tokenI = instance)
+     .then(() => HTLC.deployed())
+     .then(instance => htlcI = instance)
+     .then(() => HTLC_ERC20.deployed())
+     .then(instance => {
+       htlcERC20I = instance;
+       return { tokenI: tokenI, htlcERC20I: htlcERC20I, htlcI: htlcI }
+     })
+     .catch(err => console.error("Deploy all contracts failed with an error = ", err))
+  }
 
-     return TESTC.deployed()
-      .then(instance => tokenI = instance)
-      .then(() => HTLC.deployed())
-      .then(instance => htlcI = instance)
-      .then(() => HTLC_ERC20.deployed())
-      .then(instance => {
-        htlcERC20I = instance;
-        return { tokenI: tokenI, htlcERC20I: htlcERC20I, htlcI: htlcI }
-      })
-      .catch(err => console.error("Deploy all contracts failed with an error = ", err))
-   }
-
-   function initETHAtomicSwap(htlc, secret, receiver, timelock, sum) {
-      return htlc.hashSecret(secret, {from: part1})
-       .then(hashlock => htlc.newContract(receiver, hashlock, timelock,
-                             {from: part1, value: sum, gas: config.GAS_VALUE}))
-       .then(tx => {
-             const log = tx.logs[0]
-             utils.printNewContractInfo(log);
-             return log.args;
-        })
-        .catch(err => console.error("Init ETH Atomic swap failed with an error = " + err))
-   }
-
-   function initERC20AtomicSwap(htlc, receiver, hashlock, timelock, tokenContract, sum) {
-     return htlc.newContract(receiver, hashlock, timelock, tokenContract, sum,
-              {from: part2, gas: config.GAS_VALUE})
+  initETHAtomicSwap(htlc, secret, receiver, timelock, sum) {
+     return htlc.hashSecret(secret, {from: part1})
+      .then(hashlock => htlc.newContract(receiver, hashlock, timelock,
+                            {from: part1, value: sum, gas: config.GAS_VALUE}))
       .then(tx => {
             const log = tx.logs[0]
-            utils.printNewContractInfo(log)
+            utils.printNewContractInfo(log);
             return log.args;
        })
-       .catch(err => console.error("Init ERC20 Atomic swap failed with an error = " + err))
-   }
+       .catch(err => console.error("Init ETH Atomic swap failed with an error = " + err))
+  }
+
+  initERC20AtomicSwap(htlc, receiver, hashlock, timelock, tokenContract, sum) {
+    return htlc.newContract(receiver, hashlock, timelock, tokenContract, sum,
+             {from: part2, gas: config.GAS_VALUE})
+     .then(tx => {
+           const log = tx.logs[0]
+           utils.printNewContractInfo(log)
+           return log.args;
+      })
+      .catch(err => console.error("Init ERC20 Atomic swap failed with an error = " + err))
+  }
+
+  executeAtomicSwap() {
+
+    let resHTLC, resHTLC_ERC20, tokenI, htlcERC20I, htlcI;
+
+    //deploy all needed contracts
+    this.deployAllContracts()
+      .then(res => {
+         tokenI = res.tokenI;
+         htlcERC20I = res.htlcERC20I;
+         htlcI = res.htlcI;
+      })
+
+     //approve moving of money from Token contract instance owner to HashedTimeLockERC20 instance
+     .then(() => tokenI.approve(htlcERC20I.address, 10000, {from: this.part2}))
+
+      //create ETH HTLC script, lock fund there for second participant
+     .then(() => this.initETHAtomicSwap(htlcI, this.secret, this.part2, utils.getTimelock(true), 2))
+     .then(res => resHTLC = res)
+
+     //create ERC20 HTLC script, lock fund there for first participant
+     .then(() => this.initERC20AtomicSwap(htlcERC20I, this.part1, resHTLC.hashlock,
+                    utils.getTimelock(false), tokenI.address, 200))
+     .then(res => resHTLC_ERC20 = res)
+
+     //withdraw money from ETH ERC20 HTLC contract by first party
+     .then(() => htlcERC20I.withdraw(resHTLC_ERC20.contractId, this.secret,
+                   {from: this.part1, gas: config.GAS_VALUE}))
+     .then(tx => console.log("LOGS = ", tx.logs[0]))
+
+     //withdraw money from ETH HTLC contract by second party
+     .then(() => htlcI.withdraw(resHTLC.contractId, this.secret, {from: this.part2}))
+     .then(tx => console.log("LOGS = ", tx.logs[0]))
+
+     //error handling
+     .catch(err => console.error("error occured = ", err));
+  }
 }
 
-function deployAllContracts() {
-  let tokenI, htlcERC20I, htlcI;
-
-  return TESTC.deployed()
-   .then(instance => tokenI = instance)
-   .then(() => HTLC.deployed())
-   .then(instance => htlcI = instance)
-   .then(() => HTLC_ERC20.deployed())
-   .then(instance => {
-     htlcERC20I = instance;
-     return { tokenI: tokenI, htlcERC20I: htlcERC20I, htlcI: htlcI }
-   })
-   .catch(err => console.error("Deploy all contracts failed with an error = ", err))
-}
-
-function initETHAtomicSwap(htlc, secret, receiver, timelock, sum) {
-   return htlc.hashSecret(secret, {from: part1})
-    .then(hashlock => htlc.newContract(receiver, hashlock, timelock,
-                          {from: part1, value: sum, gas: config.GAS_VALUE}))
-    .then(tx => {
-          const log = tx.logs[0]
-          utils.printNewContractInfo(log);
-          return log.args;
-     })
-     .catch(err => console.error("Init ETH Atomic swap failed with an error = " + err))
-}
-
-function initERC20AtomicSwap(htlc, receiver, hashlock, timelock, tokenContract, sum) {
-  return htlc.newContract(receiver, hashlock, timelock, tokenContract, sum,
-           {from: part2, gas: config.GAS_VALUE})
-   .then(tx => {
-         const log = tx.logs[0]
-         utils.printNewContractInfo(log)
-         return log.args;
-    })
-    .catch(err => console.error("Init ERC20 Atomic swap failed with an error = " + err))
-}
-
-module.exports.executeAtomicSwap = executeAtomicSwap
+module.exports.AtomicSwap = AtomicSwap
