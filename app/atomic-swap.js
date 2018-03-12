@@ -78,7 +78,7 @@ web3.eth.getAccounts(function(err, accs) {
     })
 
     //create ETH HTLC script, lock fund there for second participant
-   .then(() => initETHAtomicSwap(htlcI, secret, part2, Date.now() / 1000 + 24 * 60 * 60, 2))
+   .then(() => initETHAtomicSwap(htlcI, secret, part2, utils.getTimelock(true), 2))
    .then(res => {
      console.log("New ETH HTLC was successfully added");
      resHTLC = res;
@@ -86,7 +86,7 @@ web3.eth.getAccounts(function(err, accs) {
 
    //create ERC20 HTLC script, lock fund there for first participant
    .then(() => initERC20AtomicSwap(htlcERC20I, part1, resHTLC.hashlock,
-                  Date.now() / 1000 + 12 * 60 * 60, tokenI.address, 200))
+                  utils.getTimelock(false), tokenI.address, 200))
    .then(res => {
      console.log("New ERC20 HTLC was successfully added");
      resHTLC_ERC20 = res;
