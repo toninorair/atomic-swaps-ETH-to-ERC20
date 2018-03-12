@@ -70,25 +70,19 @@ web3.eth.getAccounts(function(err, accs) {
        tokenI = res.tokenI;
        htlcERC20I = res.htlcERC20I;
        htlcI = res.htlcI;
-     })
+    })
 
    //approve moving of money from Token contract instance owner to HashedTimeLockERC20 instance
    .then(() => tokenI.approve(htlcERC20I.address, 10000, {from: part2}))
 
     //create ETH HTLC script, lock fund there for second participant
    .then(() => initETHAtomicSwap(htlcI, secret, part2, utils.getTimelock(true), 2))
-   .then(res => {
-     console.log("New ETH HTLC was successfully added");
-     resHTLC = res;
-   })
+   .then(res => resHTLC = res)
 
    //create ERC20 HTLC script, lock fund there for first participant
    .then(() => initERC20AtomicSwap(htlcERC20I, part1, resHTLC.hashlock,
                   utils.getTimelock(false), tokenI.address, 200))
-   .then(res => {
-     console.log("New ERC20 HTLC was successfully added");
-     resHTLC_ERC20 = res;
-   })
+   .then(res => resHTLC_ERC20 = res)
 
    //withdraw money from ETH ERC20 HTLC contract by first party
    .then(() => htlcERC20I.withdraw(resHTLC_ERC20.contractId, secret, {from: part1, gas: config.GAS_VALUE}))
@@ -127,7 +121,7 @@ function initETHAtomicSwap(htlc, secret, receiver, timelock, sum) {
           utils.printNewContractInfo(log);
           return log.args;
      })
-     .catch(err => console.error("error = " + err))
+     .catch(err => console.error("Init ETH Atomic swap failed with an error = " + err))
 }
 
 function initERC20AtomicSwap(htlc, receiver, hashlock, timelock, tokenContract, sum) {
@@ -138,5 +132,5 @@ function initERC20AtomicSwap(htlc, receiver, hashlock, timelock, tokenContract, 
          utils.printNewContractInfo(log)
          return log.args;
     })
-    .catch(err => console.error("error = " + err))
+    .catch(err => console.error("Init ERC20 Atomic swap failed with an error = " + err))
 }
