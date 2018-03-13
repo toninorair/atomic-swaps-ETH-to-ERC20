@@ -28,7 +28,7 @@ contract HashedTimelock {
         bytes32 hashlock,
         uint timelock
     );
-    event LogHTLCWithdraw(bytes32 indexed contractId);
+    event LogHTLCWithdraw(bytes32 indexed contractId, bytes32 indexed secret);
     event LogHTLCRefund(bytes32 indexed contractId);
 
     struct LockContract {
@@ -143,7 +143,7 @@ contract HashedTimelock {
         c.preimage = _preimage;
         c.withdrawn = true;
         c.receiver.transfer(c.amount);
-        LogHTLCWithdraw(_contractId);
+        LogHTLCWithdraw(_contractId, _preimage);
         return true;
     }
 

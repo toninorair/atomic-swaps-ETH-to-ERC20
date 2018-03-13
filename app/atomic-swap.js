@@ -140,6 +140,22 @@ class AtomicSwap {
          htlcERC20I = res.htlcERC20I;
          htlcI = res.htlcI;
       })
+      //add listener for withdrawn by first initial party
+      .then(() => {
+        var erc20Withdrawn = htlcERC20I.LogHTLCERC20Withdraw();
+        erc20Withdrawn.watch(function(err, result) {
+          if (err) {
+            console.err(err)
+            return;
+          }
+
+          let secret = result.args.secret;
+          console.log("SECRET REVEALED = ", secret)
+          htlcI.withdraw(resHTLC.contractId, secret, {from: part2})
+           .then(tx => console.log("LOGS = ", tx.logs[0]))
+           .catch(err => console.error("error occured = ", err));
+       });
+      })
 
      //approve moving of money from Token contract instance owner to HashedTimeLockERC20 instance
      .then(() => tokenI.approve(htlcERC20I.address, this.tokenSum, {from: this.part2}))
@@ -158,9 +174,9 @@ class AtomicSwap {
                    {from: this.part1, gas: config.GAS_VALUE}))
      .then(tx => console.log("LOGS = ", tx.logs[0]))
 
-     //withdraw money from ETH HTLC contract by second party
-     .then(() => htlcI.withdraw(resHTLC.contractId, this.secret, {from: this.part2}))
-     .then(tx => console.log("LOGS = ", tx.logs[0]))
+     // //withdraw money from ETH HTLC contract by second party
+     // .then(() => htlcI.withdraw(resHTLC.contractId, this.secret, {from: this.part2}))
+     // .then(tx => console.log("LOGS = ", tx.logs[0]))
 
      //error handling
      .catch(err => console.error("error occured = ", err));

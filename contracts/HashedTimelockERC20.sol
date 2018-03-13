@@ -32,7 +32,7 @@ contract HashedTimelockERC20 {
         bytes32 hashlock,
         uint timelock
     );
-    event LogHTLCERC20Withdraw(bytes32 indexed contractId);
+    event LogHTLCERC20Withdraw(bytes32 indexed contractId, bytes32 indexed secret);
     event LogHTLCERC20Refund(bytes32 indexed contractId);
 
     struct LockContract {
@@ -172,7 +172,7 @@ contract HashedTimelockERC20 {
         c.preimage = _preimage;
         c.withdrawn = true;
         ERC20(c.tokenContract).transfer(c.receiver, c.amount);
-        LogHTLCERC20Withdraw(_contractId);
+        LogHTLCERC20Withdraw(_contractId, _preimage);
         return true;
     }
 
