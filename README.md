@@ -2,7 +2,7 @@
 
 atomic swap between ETH and ERC20 tokens
 
-# Run
+# deploy & run
 1. Install dependencies
 ```
 $ npm install
