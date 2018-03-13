@@ -144,6 +144,7 @@ class AtomicSwap {
       .then(() => {
         var erc20Withdrawn = htlcERC20I.LogHTLCERC20Withdraw();
         erc20Withdrawn.watch(function(err, result) {
+
           if (err) {
             console.err(err)
             return;
@@ -151,8 +152,12 @@ class AtomicSwap {
 
           let secret = result.args.secret;
           console.log("SECRET REVEALED = ", secret)
+          //withdraw money from ETH HTLC contract by second party
           htlcI.withdraw(resHTLC.contractId, secret, {from: part2})
-           .then(tx => console.log("LOGS = ", tx.logs[0]))
+           .then(tx => {
+             console.log("LOGS = ", tx.logs[0])
+             erc20Withdrawn.stopWatching((err, result) => {});
+            })
            .catch(err => console.error("error occured = ", err));
        });
       })
