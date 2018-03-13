@@ -9,7 +9,7 @@ $ npm install
 ```
 2. Run blockchain, for example 
 ```
-testrpc
+$ testrpc
 ```
 3. Compile and deploy your smart contracts
 ```
@@ -18,5 +18,5 @@ testrpc
 ```
 4. Run atomic swap 
 ```
-  node app/run.js
+  $ node app/run.js
 ```
