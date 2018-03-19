@@ -175,8 +175,12 @@ class AtomicSwap {
      .then(res => resHTLC_ERC20 = res)
 
      //withdraw money from ETH ERC20 HTLC contract by first party
+     // .then(() => htlcERC20I.withdraw.estimateGas(resHTLC_ERC20.contractId, this.secret,
+     //               {from: this.part1}))
+    // .then(res => console.log("gas estimate res = ", res))
+
      .then(() => htlcERC20I.withdraw(resHTLC_ERC20.contractId, this.secret,
-                   {from: this.part1, gas: config.GAS_VALUE}))
+                   {from: this.part1, gas: config.GAS_VALUE_MIN}))
      .then(tx => console.log("LOGS = ", tx.logs[0]))
 
      // //withdraw money from ETH HTLC contract by second party
