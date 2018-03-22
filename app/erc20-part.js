@@ -28,7 +28,7 @@ if (typeof TESTC.currentProvider.sendAsync !== "function") {
   };
 }
 
-deployContracts() {
+function deployContracts() {
   let tokenI, htlcERC20I;
 
   return TESTC.deployed()
@@ -39,4 +39,20 @@ deployContracts() {
      return { tokenI: tokenI, htlcERC20I: htlcERC20I}
    })
    .catch(err => console.error("Deployment of HTLC_ERC20 and TESTC failed with an error = ", err))
+}
+
+function initERC20AtomicSwap(owner, htlc, receiver, hashlock, timelock, tokenContract, tokenSum) {
+  return htlc.newContract(receiver, hashlock, timelock, tokenContract, tokenSum,
+           {from: owner, gas: config.GAS_VALUE})
+   .then(tx => {
+         const log = tx.logs[0]
+         utils.printNewContractInfo(log)
+         return log.args;
+    })
+    .catch(err => console.error("Init ERC20 Atomic swap failed with an error = " + err))
+}
+
+function withdraw(htlc, contractId, secret, owner) {
+  return htlc.withdraw(contractId, secret,
+                {from: owner, gas: config.GAS_VALUE_MIN})
 }

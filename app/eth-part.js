@@ -17,10 +17,10 @@ if (typeof HTLC.currentProvider.sendAsync !== "function") {
   };
 }
 
-deployContracts() {
+function deployContracts() {
   let htlcI;
 
-  return HTLC.deployed())
+  return HTLC.deployed()
    .then(instance => {
      htlcI = instance;
      return { htlcI: htlcI }
@@ -29,14 +29,14 @@ deployContracts() {
 }
 
 
-initETHAtomicSwap(owner, htlc, receiver, timelock) {
+function initETHAtomicSwap(owner, htlc, receiver, timelock, ethSum) {
    return htlc.hashSecret(this.secret, {from: owner})
     .then(hashlock => {
       console.log("sha")
       console.log("SHA256 = ", hashlock.toString('hex'))
       console.log("SHA 256 buffer = ", Buffer.from(hashlock))
       return htlc.newContract(receiver, hashlock, timelock,
-                          {from: owner, value: this.ethSum, gas: config.GAS_VALUE})
+                          {from: owner, value: ethSum, gas: config.GAS_VALUE})
     })
     .then(tx => {
           const log = tx.logs[0]
@@ -44,4 +44,13 @@ initETHAtomicSwap(owner, htlc, receiver, timelock) {
           return log.args;
      })
      .catch(err => console.error("Init ETH Atomic swap failed with an error = " + err))
+}
+
+function withdraw(htlc, contractId, secret, owner) {
+  return htlc.withdraw(contractId, secret, {from: owner})
+   .then(tx => {
+     console.log("LOGS = ", tx.logs[0])
+     return tx.logs[0].args;
+    })
+   .catch(err => console.error("error occured = ", err));
 }
