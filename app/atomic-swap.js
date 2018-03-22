@@ -107,8 +107,13 @@ class AtomicSwap {
 
   initETHAtomicSwap(owner, htlc, receiver, timelock) {
      return htlc.hashSecret(this.secret, {from: owner})
-      .then(hashlock => htlc.newContract(receiver, hashlock, timelock,
-                            {from: owner, value: this.ethSum, gas: config.GAS_VALUE}))
+      .then(hashlock => {
+        console.log("sha")
+        console.log("SHA256 = ", hashlock.toString('hex'))
+        console.log("SHA 256 buffer = ", Buffer.from(hashlock))
+        return htlc.newContract(receiver, hashlock, timelock,
+                            {from: owner, value: this.ethSum, gas: config.GAS_VALUE})
+      })
       .then(tx => {
             const log = tx.logs[0]
             utils.printNewContractInfo(log);
