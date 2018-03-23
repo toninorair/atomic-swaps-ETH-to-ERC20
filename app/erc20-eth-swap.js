@@ -48,8 +48,8 @@ function swap(secret, part1, part2, ethSum, tokenSum) {
     })
     //add listener for withdrawn by first initial party
     .then(() => {
-      var erc20Withdrawn = htlcERC20I.LogHTLCERC20Withdraw();
-      erc20Withdrawn.watch(function(err, result) {
+      var ethWithdrawn = htlcI.LogHTLCWithdraw();
+      ethWithdrawn.watch(function(err, result) {
 
         if (err) {
           console.err(err)
@@ -59,10 +59,11 @@ function swap(secret, part1, part2, ethSum, tokenSum) {
         let secret = result.args.secret;
         console.log("SECRET REVEALED = ", secret)
         //withdraw money from ETH HTLC contract by second party
-        htlcI.withdraw(resHTLC.contractId, secret, {from: part2})
-         .then(tx => {
+        htlcERC20I.withdraw(resHTLC_ERC20.contractId, secret,
+                      {from: part1, gas: config.GAS_VALUE_MIN})
+        .then(tx => {
            console.log("LOGS = ", tx.logs[0])
-           erc20Withdrawn.stopWatching((err, result) => {});
+           ethWithdrawn.stopWatching((err, result) => {});
           })
          .catch(err => console.error("error occured = ", err));
      });
@@ -70,24 +71,21 @@ function swap(secret, part1, part2, ethSum, tokenSum) {
     //approve moving of money from Token contract instance owner to HashedTimeLockERC20 instance
     .then(() => tokenI.approve(htlcERC20I.address, tokenSum, {from: part2}))
     //find out hashlock of the SECRET
-    .then(() => htlcI.hashSecret(secret, {from: part1}))
-
-     //create ETH HTLC script, lock fund there for second participant
-    .then(hashlock => ethSwap.init(part1, htlcI, part2, hashlock, utils.getTimelock(true), ethSum))
-    .then(res => resHTLC = res)
+    .then(() => htlcERC20I.hashSecret(secret, {from: part2}))
 
     //create ERC20 HTLC script, lock fund there for first participant
-    .then(() => erc20Swap.init(part2, htlcERC20I, part1, resHTLC.hashlock,
+    .then(hashlock => erc20Swap.init(part2, htlcERC20I, part1, hashlock,
                    utils.getTimelock(false), tokenI.address, tokenSum))
     .then(res => resHTLC_ERC20 = res)
-    //withdraw ERC20
-    .then(() => htlcERC20I.withdraw(resHTLC_ERC20.contractId, secret,
-                  {from: part1, gas: config.GAS_VALUE_MIN}))
-    .then(tx => console.log("LOGS = ", tx.logs[0]))
 
-    // //withdraw money from ETH HTLC contract by second party
-    // .then(() => htlcI.withdraw(resHTLC.contractId, this.secret, {from: this.part2}))
-    // .then(tx => console.log("LOGS = ", tx.logs[0]))
+     //create ETH HTLC script, lock fund there for second participant
+    .then(() => ethSwap.init(part1, htlcI, part2, resHTLC_ERC20.hashlock, utils.getTimelock(true), ethSum))
+    .then(res => resHTLC = res)
+
+
+    //withdraw ETH
+    .then(() => htlcI.withdraw(resHTLC.contractId, secret, {from: part2}))
+    .then(tx => console.log("LOGS = ", tx.logs[0]))
 
     //error handling
     .catch(err => console.error("error occured = ", err));
