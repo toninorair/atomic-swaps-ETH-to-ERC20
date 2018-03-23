@@ -1,5 +1,5 @@
-var ethSwap = require('./eth-part.js');
-var btcSwap = require('./bitcoin-part.js');
+var ethSwap = require('./blockchains/eth-part.js');
+var btcSwap = require('./blockchains/bitcoin-part.js');
 
 var config = require('./config.js')
 var utils = require('./utils.js')

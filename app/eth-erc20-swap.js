@@ -1,5 +1,5 @@
-var ethSwap = require('./eth-part.js');
-var erc20Swap = require('./erc20-part.js');
+var ethSwap = require('./blockchains/eth-part.js');
+var erc20Swap = require('./blockchains/erc20-part.js');
 
 var config = require('./config.js')
 var utils = require('./utils.js')

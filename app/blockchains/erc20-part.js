@@ -1,12 +1,12 @@
 var contract = require('truffle-contract')
 var Web3 = require('web3');
 
-var config = require('./config.js')
-var utils = require('./utils.js')
+var config = require('../config.js')
+var utils = require('../utils.js')
 
 let web3 = new Web3(new Web3.providers.HttpProvider(config.blockchainNodeAdrress));
 
-var HTLC_ERC20 = contract(require('../build/contracts/HashedTimelockERC20.json'))
+var HTLC_ERC20 = contract(require('../../build/contracts/HashedTimelockERC20.json'))
 HTLC_ERC20.setProvider(web3.currentProvider)
 //dirty hack for web3@1.0.0 support for localhost testrpc, see https://github.com/trufflesuite/truffle-contract/issues/56#issuecomment-331084530
 if (typeof HTLC_ERC20.currentProvider.sendAsync !== "function") {
@@ -17,7 +17,7 @@ if (typeof HTLC_ERC20.currentProvider.sendAsync !== "function") {
   };
 }
 
-var TESTC = contract(require('../build/contracts/TestToken.json'))
+var TESTC = contract(require('../../build/contracts/TestToken.json'))
 TESTC.setProvider(web3.currentProvider)
 //dirty hack for web3@1.0.0 support for localhost testrpc, see https://github.com/trufflesuite/truffle-contract/issues/56#issuecomment-331084530
 if (typeof TESTC.currentProvider.sendAsync !== "function") {

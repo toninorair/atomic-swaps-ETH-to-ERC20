@@ -1,12 +1,12 @@
 var contract = require('truffle-contract')
 var Web3 = require('web3');
 
-var config = require('./config.js')
-var utils = require('./utils.js')
+var config = require('../config.js')
+var utils = require('../utils.js')
 
 let web3 = new Web3(new Web3.providers.HttpProvider(config.blockchainNodeAdrress));
 
-var HTLC = contract(require('../build/contracts/HashedTimelock.json'))
+var HTLC = contract(require('../../build/contracts/HashedTimelock.json'))
 HTLC.setProvider(web3.currentProvider)
 //dirty hack for web3@1.0.0 support for localhost testrpc, see https://github.com/trufflesuite/truffle-contract/issues/56#issuecomment-331084530
 if (typeof HTLC.currentProvider.sendAsync !== "function") {
