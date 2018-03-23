@@ -51,12 +51,11 @@ function swap(secret, part1, part2, ethSum, tokenSum) {
           return;
         }
 
-        let secret = result.args.secret;
+        let secret = web3.utils.toAscii(result.args.secret);
         console.log("SECRET REVEALED = ", secret)
+        //TODO withdraw money from bitcoin side HERE
         btcSwap.redeemBTCFromScript('81449b5125ce9df7a8846bda46f1655566d012e65e73c3da2bb07c1445879dac', 1, 1000, secret)
         ethWithdrawn.stopWatching((err, result) => {});
-        //TODO withdraw money from bitcoin side HERE
-
      });
     })
     //TODO here should be returned txid, input num and sum
@@ -69,6 +68,7 @@ function swap(secret, part1, part2, ethSum, tokenSum) {
 
     // //withdraw money from ETH HTLC contract by second party
     .then(() => htlcI.withdraw(resHTLC.contractId, secret, {from: part2}))
+
     .then(tx => console.log("LOGS = ", tx.logs[0]))
 
     //error handling
