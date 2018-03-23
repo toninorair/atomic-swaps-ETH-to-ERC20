@@ -1,7 +1,8 @@
 var Web3 = require('web3');
 
 var config = require('./config.js')
-var swaps = require('./atomic-swap.js');
+//var swaps = require('./atomic-swap.js');
+var swaps = require('./eth-erc20-swap.js')
 
 let web3 = new Web3(new Web3.providers.HttpProvider(config.blockchainNodeAdrress));
 
@@ -26,7 +27,8 @@ web3.eth.getAccounts(function(err, accs) {
   let ethSum = 2;
   let tokenSum = 200;
 
-  swap = new swaps.AtomicSwap(secret, part1, part2, ethSum, tokenSum);
-  swap.executeAtomicSwap();
+  //swap = new swaps.AtomicSwap(secret, part1, part2, ethSum, tokenSum);
+  //swap.executeAtomicSwap();
+  swaps.swap(secret, part1, part2, ethSum, tokenSum)
 
 });

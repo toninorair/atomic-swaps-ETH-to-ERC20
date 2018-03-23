@@ -41,7 +41,7 @@ function deployContracts() {
    .catch(err => console.error("Deployment of HTLC_ERC20 and TESTC failed with an error = ", err))
 }
 
-function initERC20AtomicSwap(owner, htlc, receiver, hashlock, timelock, tokenContract, tokenSum) {
+function init(owner, htlc, receiver, hashlock, timelock, tokenContract, tokenSum) {
   return htlc.newContract(receiver, hashlock, timelock, tokenContract, tokenSum,
            {from: owner, gas: config.GAS_VALUE})
    .then(tx => {
@@ -55,4 +55,10 @@ function initERC20AtomicSwap(owner, htlc, receiver, hashlock, timelock, tokenCon
 function withdraw(htlc, contractId, secret, owner) {
   return htlc.withdraw(contractId, secret,
                 {from: owner, gas: config.GAS_VALUE_MIN})
+}
+
+module.exports = {
+  init: init,
+  deploy: deployContracts,
+  withdraw: withdraw
 }

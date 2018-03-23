@@ -29,8 +29,8 @@ function deployContracts() {
 }
 
 
-function initETHAtomicSwap(owner, htlc, receiver, timelock, ethSum) {
-   return htlc.hashSecret(this.secret, {from: owner})
+function init(owner, htlc, receiver, timelock, ethSum, secret) {
+   return htlc.hashSecret(secret, {from: owner})
     .then(hashlock => {
       console.log("sha")
       console.log("SHA256 = ", hashlock.toString('hex'))
@@ -53,4 +53,10 @@ function withdraw(htlc, contractId, secret, owner) {
      return tx.logs[0].args;
     })
    .catch(err => console.error("error occured = ", err));
+}
+
+module.exports = {
+  init: init,
+  deploy: deployContracts,
+  withdraw: withdraw
 }
