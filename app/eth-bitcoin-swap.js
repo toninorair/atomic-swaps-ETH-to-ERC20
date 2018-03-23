@@ -54,7 +54,7 @@ function swap(secret, part1, part2, ethSum, tokenSum) {
         let secret = web3.utils.toAscii(result.args.secret);
         console.log("SECRET REVEALED = ", secret)
         //TODO withdraw money from bitcoin side HERE
-        btcSwap.redeemBTCFromScript('81449b5125ce9df7a8846bda46f1655566d012e65e73c3da2bb07c1445879dac', 1, 1000, secret)
+        btcSwap.redeemBTCFromScript('b6246c54d991da100bd766d80e28210db5ea4f61a6ef2244af7f4dc1597b6a61', 1, 1000, secret)
         ethWithdrawn.stopWatching((err, result) => {});
      });
     })
