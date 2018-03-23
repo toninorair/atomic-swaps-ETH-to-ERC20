@@ -250,7 +250,7 @@ contract HashedTimelockERC20 {
      * @return the hashed secret.
      */
     function hashSecret(bytes32 secret)
-        constant
+        pure
         public
         returns(bytes32 hashed)
     {
