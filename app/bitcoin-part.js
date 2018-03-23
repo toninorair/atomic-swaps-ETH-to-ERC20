@@ -17,33 +17,31 @@ console.log("Part1 address = ", part1Address);
 console.log("Part2 address = ", part2Address);
 
 
-
-let secret = Buffer.from('hello');
-let secretHash = bitcoin.crypto.sha256('hello');
-console.log("secret hash buffer =", secretHash)
-console.log('secretHash = ', secretHash.toString('hex'))
-
-
-//OP_HASH160 [HASH SECRET] OP_EQUALVERIFY [PubK] OP_CHECKSIG
-//redeemScript, money can be redeemed by second party
-var redeemScript = bitcoin.script.compile([
-    bitcoin.opcodes.OP_HASH256,
-    secretHash,
-    bitcoin.opcodes.OP_EQUALVERIFY,
-    part2Q.getPublicKeyBuffer(),
-    bitcoin.opcodes.OP_CHECKSIG
-]);
-
 let sendMoneyToAddress = part2Address
+let redeemScript;
 
+function hashSecret(secret) {
+  return bitcoin.crypto.hash160(secret);
+}
 
+function createP2SH(secret) {
+  let secretHash = hashSecret(secret);
 
-function createP2SH() {
+  //OP_HASH160 [HASH SECRET] OP_EQUALVERIFY [PubK] OP_CHECKSIG
+  //redeemScript, money can be redeemed by second party
+  redeemScript = bitcoin.script.compile([
+      bitcoin.opcodes.OP_HASH160,
+      secretHash,
+      bitcoin.opcodes.OP_EQUALVERIFY,
+      part2Q.getPublicKeyBuffer(),
+      bitcoin.opcodes.OP_CHECKSIG
+  ]);
+
   //console.log('SCRIPT = ', bitcoin.script.toASM(redeemScript));
   var part1ToPart2ScriptPubKey = bitcoin.script.scriptHash.output.encode(bitcoin.crypto.hash160(redeemScript))
   var part1ToPart2P2SHAddress = bitcoin.address.fromOutputScript(part1ToPart2ScriptPubKey, testnet)
 
-  console.log('P2SHAddress = ', part1ToPart2P2SHAddress);
+  console.log('send bitcoin to P2SHAddress = ', part1ToPart2P2SHAddress);
 }
 
 
@@ -70,12 +68,13 @@ function redeemBTCFromScript(txid, inputNum, amount, secret) {
   console.log("raw transaction hex = " + txRaw.toHex());
 }
 
-createP2SH();
+//createP2SH();
 //redeemBTCFromScript('81449b5125ce9df7a8846bda46f1655566d012e65e73c3da2bb07c1445879dac', 1, 1000)
 
 
 
-
-//try to send money from script to my address
-// var txid = '19177214c94bfadd1a62977d95894387dc2b5640fbb5203015f8a0ba0d3a6b41'
-// var addressToSentromScript = 'mffVPNekSwA8JPxWUcweG1Vv96irkwgVPV'
+module.exports = {
+  hashSecret: hashSecret,
+  createP2SH: createP2SH,
+  redeemBTCFromScript: redeemBTCFromScript
+}
