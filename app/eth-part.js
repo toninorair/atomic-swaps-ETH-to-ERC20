@@ -29,15 +29,9 @@ function deployContracts() {
 }
 
 
-function init(owner, htlc, receiver, timelock, ethSum, secret) {
-   return htlc.hashSecret(secret, {from: owner})
-    .then(hashlock => {
-      console.log("sha")
-      console.log("SHA256 = ", hashlock.toString('hex'))
-      console.log("SHA 256 buffer = ", Buffer.from(hashlock))
-      return htlc.newContract(receiver, hashlock, timelock,
+function init(owner, htlc, receiver, hashlock, timelock, ethSum) {
+   return htlc.newContract(receiver, hashlock, timelock,
                           {from: owner, value: ethSum, gas: config.GAS_VALUE})
-    })
     .then(tx => {
           const log = tx.logs[0]
           utils.printNewContractInfo(log);

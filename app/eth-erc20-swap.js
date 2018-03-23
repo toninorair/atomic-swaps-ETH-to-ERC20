@@ -37,9 +37,11 @@ function swap(secret, part1, part2, ethSum, tokenSum) {
     })
     //approve moving of money from Token contract instance owner to HashedTimeLockERC20 instance
     .then(() => tokenI.approve(htlcERC20I.address, tokenSum, {from: part2}))
+    //find out hashlock of the SECRET
+    .then(() => htlcI.hashSecret(secret, {from: part1}))
 
      //create ETH HTLC script, lock fund there for second participant
-    .then(() => ethSwap.init(part1, htlcI, part2, utils.getTimelock(true), ethSum, secret))
+    .then(hashlock => ethSwap.init(part1, htlcI, part2, hashlock, utils.getTimelock(true), ethSum))
     .then(res => resHTLC = res)
 
     //create ERC20 HTLC script, lock fund there for first participant
